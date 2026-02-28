@@ -1,6 +1,7 @@
 """Confidence metrics for synthetic labels."""
 
 import json
+import math
 from collections import Counter
 from typing import Any
 
@@ -15,7 +16,12 @@ def _normalize_entity_output(raw: str) -> str | None:
         try:
             parsed = json.loads(raw[start:end])
             if isinstance(parsed, list):
-                simplified = [{"text": str(e.get("text", e.get("entity", ""))), "type": str(e.get("type", e.get("label", "O")))} for e in parsed if isinstance(e, dict)]
+                simplified = []
+                for e in parsed:
+                    if isinstance(e, dict):
+                        text_value = str(e.get("text", e.get("entity", "")))
+                        type_value = str(e.get("type", e.get("label", "O")))
+                        simplified.append({"text": text_value, "type": type_value})
                 return json.dumps(simplified, sort_keys=True)
         except json.JSONDecodeError:
             pass
@@ -42,6 +48,8 @@ def compute_self_consistency(generations: list[str]) -> tuple[str, float]:
 
     if not valid:
         # No valid JSON - use raw majority or first
+        if not generations:
+            return "", 0.0
         counter = Counter(generations)
         majority = counter.most_common(1)[0][0]
         return majority, 0.0
@@ -75,5 +83,6 @@ def compute_logprob_confidence(logprobs_list: list[list[float]]) -> float:
     min_lp = min(mean_logprobs)
     if max_lp == min_lp:
         return 1.0
-    # Use the best sequence's relative score as confidence
-    return (max_lp - min_lp) / (max_lp - min_lp + 1e-8) if max_lp > min_lp else 0.5
+    # Use spread-based confidence: tighter spreads produce values near 1
+    spread = max_lp - min_lp
+    return math.exp(-spread)

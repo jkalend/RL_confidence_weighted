@@ -1,6 +1,7 @@
 """Generate synthetic labels with confidence scores."""
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Literal
 
@@ -31,7 +32,7 @@ def generate_synthetic_dataset(
     """
     config = config or DataConfig()
     output_path = Path(output_path) if output_path else DATA_DIR / "synthetic_target.json"
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Keep user-facing model name for storage (before alias resolution)
     model_name_for_record = model_name
@@ -74,8 +75,12 @@ def generate_synthetic_dataset(
         model.eval()
 
     def _save():
-        with open(output_path, "w", encoding="utf-8") as f:
+        temp_path = output_path.with_suffix(".tmp")
+        with open(temp_path, "w", encoding="utf-8") as f:
             json.dump(D_syn, f, indent=2, ensure_ascii=False)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(temp_path, output_path)
 
     for sample in tqdm(samples, desc="Generating synthetic labels"):
         sentence = sample["sentence"]

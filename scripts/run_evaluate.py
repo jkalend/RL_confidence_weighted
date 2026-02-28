@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.config import Config, CHECKPOINT_DIR, OUTPUT_DIR
+from src.config import CHECKPOINT_DIR, OUTPUT_DIR
 from src.evaluate import run_evaluation
 
 
@@ -29,7 +29,7 @@ def main():
     out["source_report"] = str(results.get("source_report", ""))
     out["target_report"] = str(results.get("target_report", ""))
 
-    with open(args.output, "w") as f:
+    with open(args.output, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=2)
 
     print(json.dumps(out, indent=2))

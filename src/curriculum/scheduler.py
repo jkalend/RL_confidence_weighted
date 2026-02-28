@@ -21,19 +21,25 @@ class CurriculumScheduler:
     def g(self, step: int) -> float:
         """Return fraction of data to include at this step (0 to 1)."""
         t = step / max(1, self.total_steps - 1)  # normalize to [0, 1]
+        start = self.config.start_percentile
+        end = self.config.end_percentile
 
         if self.config.schedule == "linear":
-            # g(t) = min(1, start + lambda * t)
-            return min(1.0, self.config.start_percentile + self.config.lambda_factor * t)
+            # g(t) = start + (end - start) * t
+            res = start + (end - start) * t
         elif self.config.schedule == "root":
-            # g(t) = min(1, sqrt(t^2 + start_bias))
-            return min(1.0, math.sqrt(t * t + self.config.start_percentile))
+            # g(t) = start + (end - start) * sqrt(t)
+            res = start + (end - start) * math.sqrt(t)
         elif self.config.schedule == "step":
-            # Pre-computed bins
+            # Pre-computed bins scaled between start and end
             idx = min(int(t * len(self.config.step_bins)), len(self.config.step_bins) - 1)
-            return self.config.step_bins[idx]
+            # Interpolate or scale the bin value between start and end
+            bin_val = self.config.step_bins[idx]
+            res = start + (end - start) * bin_val
         else:
-            return min(1.0, self.config.start_percentile + self.config.lambda_factor * t)
+            res = start + (end - start) * t
+
+        return max(0.0, min(1.0, res))
 
     def get_percentile_threshold(self, step: int, sorted_confidences: list[float]) -> float:
         """
@@ -41,6 +47,9 @@ class CurriculumScheduler:
         So we need confidence >= percentile at (1 - g(t)).
         E.g. g(t)=0.2 means we use top 20% -> threshold = 80th percentile of confidence.
         """
+        if not sorted_confidences:
+            return 0.0
+
         g_t = self.g(step)
         # We want top g(t) fraction -> threshold is the (1-g(t)) percentile
         idx = int((1 - g_t) * len(sorted_confidences))

@@ -29,11 +29,14 @@ def _extract_entities_from_bio(tokens: list[str], tags: list[str | int], label_n
         else:
             label = label_names[tag_idx] if tag_idx < len(label_names) else "O"
 
-        if label.startswith("B-") or label.startswith("I-") and (current_entity is None or not label[2:].startswith(current_entity["type"].split("-")[0])):
+        label_type = label[2:] if len(label) > 2 else ""
+        if (label.startswith("B-") or label.startswith("I-")) and (
+            current_entity is None or label_type.split("-")[0] != current_entity["type"].split("-")[0]
+        ):
             if current_entity:
                 current_entity["text"] = " ".join(current_tokens)
                 entities.append(current_entity)
-            current_entity = {"type": label[2:], "start": i, "end": i + 1}
+            current_entity = {"type": label_type, "start": i, "end": i + 1}
             current_tokens = [token]
         elif label.startswith("I-") and current_entity:
             current_tokens.append(token)
@@ -105,13 +108,20 @@ def load_few_nerd(split: str = "train", subset: str | None = "inter", max_sample
 
 def load_ner_dataset(config: DataConfig, domain: str = "target") -> list[dict[str, Any]]:
     """Load NER dataset based on config."""
-    if domain == "source":
-        return load_conll2003(config.source_split)
+    dataset_name = config.source_dataset if domain == "source" else config.target_dataset
+    split = config.source_split if domain == "source" else config.target_split
+    subset = config.source_subset if domain == "source" else config.target_subset
+
+    if dataset_name == "conll2003":
+        return load_conll2003(split=split)
+    elif dataset_name == "few-nerd":
+        return load_few_nerd(split=split, subset=subset)
     else:
-        return load_few_nerd(
-            split=config.target_split,
-            subset=config.target_subset,
-        )
+        # Fallback to defaults or raise error
+        if domain == "source":
+            return load_conll2003(split)
+        else:
+            return load_few_nerd(split=split, subset=subset)
 
 
 def entities_to_json(entities: list[dict]) -> str:

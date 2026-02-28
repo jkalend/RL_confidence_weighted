@@ -22,6 +22,7 @@ class DataConfig:
     target_dataset: str = "DFKI-SLT/few-nerd"
     target_split: str = "train"  # train, validation, or test (not "supervised" - that's a config)
     target_subset: str | None = "inter"  # inter, intra, or None for full
+    source_subset: str | None = None
 
     # Synthetic generation
     num_generations_per_input: int = 8
@@ -90,6 +91,7 @@ class GRPOConfig:
     # Wandb
     report_to: str = "wandb"
     run_name: str | None = None
+    bf16: bool | None = None
 
 
 @dataclass

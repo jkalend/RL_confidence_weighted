@@ -84,16 +84,19 @@ def make_entity_reward_func(
 
     def reward_func(completions, pseudo_label=None, **kwargs):
         if pseudo_label is None:
-            pseudo_label = [""] * len(completions)
+            raise ValueError("pseudo_label is required for reward computation.")
         if not isinstance(pseudo_label, list):
-            pseudo_label = [pseudo_label] * len(completions)
+            raise ValueError(f"pseudo_label must be a list, got {type(pseudo_label)}")
+        if len(pseudo_label) != len(completions):
+            raise ValueError(
+                f"Length mismatch: completions ({len(completions)}) vs pseudo_label ({len(pseudo_label)})"
+            )
 
         rewards = []
-        for completion, ref in zip(completions, pseudo_label):
-            content = completion[0]["content"] if isinstance(completion, list) else completion
-            pred_json = _extract_json_from_completion(content)
+        for completion, ref in zip(completions, pseudo_label, strict=True):
+            pred_json = _extract_json_from_completion(completion)
 
-            fmt_r = _format_reward(content)
+            fmt_r = _format_reward(completion)
             if reward_type == "sparse":
                 acc_r = _sparse_reward(pred_json, ref)
             else:

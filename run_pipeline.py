@@ -38,7 +38,18 @@ def main():
         config = Config()
         config.model.model_name = args.model
         config.grpo.num_train_epochs = args.epochs
-        run_grpo_training(config=config, synthetic_path=synthetic_path, use_unsloth=True)
+        run_grpo_training(
+            config=config,
+            synthetic_path=synthetic_path,
+            use_unsloth=(args.backend == "unsloth"),
+        )
+    else:
+        # Check if checkpoint exists before skipping to evaluation
+        checkpoint_path = CHECKPOINT_DIR / "final"
+        if not checkpoint_path.exists():
+            print(f"Error: Checkpoint not found at {checkpoint_path}")
+            print("Please run training first (remove --skip-train) or provide a checkpoint.")
+            exit(1)
 
     # 3. Evaluate
     results = run_evaluation(

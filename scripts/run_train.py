@@ -1,10 +1,7 @@
 """Run GRPO training with curriculum."""
 
 import argparse
-import sys
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.config import Config, DATA_DIR
 from src.train import run_grpo_training

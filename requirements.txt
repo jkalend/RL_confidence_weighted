@@ -1,13 +1,13 @@
 # Core ML - PyTorch with CUDA 13.0 (RTX 4090)
 # Run first: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130
-torch>=2.4.0
-transformers>=4.45.0
+torch>=2.10.0
+transformers>=4.53.0
 accelerate>=0.34.0
 
 # Unsloth - memory-efficient training (QLoRA, GRPO)
 # For CUDA 13.0 + PyTorch 2.10: pip install "unsloth[cu130-torch2100]"
 # Or use plain unsloth if PyTorch cu130 is already installed
-unsloth
+unsloth[cu130-torch2100]
 
 # TRL - GRPOTrainer for RL
 trl>=0.15.0

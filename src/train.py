@@ -33,6 +33,15 @@ def load_synthetic_for_training(path: Path | str) -> list[dict[str, Any]]:
         return json.load(f)
 
 
+def _is_bf16_supported():
+    """Check if hardware supports BF16."""
+    try:
+        import torch
+        return torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+    except Exception:
+        return False
+
+
 def run_grpo_training(
     config: Config | None = None,
     synthetic_path: Path | str | None = None,
@@ -76,7 +85,7 @@ def run_grpo_training(
             num_generations=config.grpo.num_generations,
             report_to=config.grpo.report_to,
             run_name=f"{config.grpo.run_name or 'curriculum-grpo'}-stage{epoch}",
-            bf16=True,
+            bf16=config.grpo.bf16 if hasattr(config.grpo, "bf16") else _is_bf16_supported(),
             gradient_checkpointing=True,
         )
 
