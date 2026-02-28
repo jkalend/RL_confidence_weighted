@@ -100,8 +100,13 @@ def generate_synthetic_dataset(
                 model, tokenizer, prompt, K, temperature, max_new_tokens
             )
 
-        # Compute confidence (self-consistency)
-        pseudo_label, confidence = compute_self_consistency(generations)
+        # Compute confidence based on metric
+        if config.confidence_metric == "self_consistency":
+            pseudo_label, confidence = compute_self_consistency(generations)
+        elif config.confidence_metric == "logprob":
+            raise NotImplementedError("Logprob confidence metric is not yet implemented in generation flow.")
+        else:
+            raise ValueError(f"Unknown confidence metric: {config.confidence_metric}")
 
         # If we have ground truth, we could compare - but for test-time we don't
         D_syn.append({

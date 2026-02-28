@@ -161,7 +161,7 @@ def run_evaluation(
 
     source_samples = load_conll2003(config.data.source_split if config else "test")
     target_samples = load_few_nerd(
-        split=config.data.target_split if config else "test",
+        split="test",  # Use held-out test split for evaluation
         subset=config.data.target_subset if config else "inter",
         max_samples=max_eval
     )

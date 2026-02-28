@@ -31,6 +31,8 @@ class CurriculumScheduler:
             # g(t) = start + (end - start) * sqrt(t)
             res = start + (end - start) * math.sqrt(t)
         elif self.config.schedule == "step":
+            if not self.config.step_bins:
+                raise ValueError("step_bins must not be empty for 'step' schedule")
             # Pre-computed bins scaled between start and end
             idx = min(int(t * len(self.config.step_bins)), len(self.config.step_bins) - 1)
             # Use the bin value directly (already percentiles)

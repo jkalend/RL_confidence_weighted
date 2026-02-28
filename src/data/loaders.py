@@ -30,17 +30,22 @@ def _extract_entities_from_bio(tokens: list[str], tags: list[str | int], label_n
             label = label_names[tag_idx] if tag_idx < len(label_names) else "O"
 
         label_type = label[2:] if len(label) > 2 else ""
-        if (label.startswith("B-") or label.startswith("I-")) and (
-            current_entity is None or label_type != current_entity["type"]
-        ):
+        if label.startswith("B-"):
             if current_entity:
                 current_entity["text"] = " ".join(current_tokens)
                 entities.append(current_entity)
             current_entity = {"type": label_type, "start": i, "end": i + 1}
             current_tokens = [token]
-        elif label.startswith("I-") and current_entity:
-            current_tokens.append(token)
-            current_entity["end"] = i + 1
+        elif label.startswith("I-"):
+            if current_entity and label_type == current_entity["type"]:
+                current_tokens.append(token)
+                current_entity["end"] = i + 1
+            else:
+                if current_entity:
+                    current_entity["text"] = " ".join(current_tokens)
+                    entities.append(current_entity)
+                current_entity = {"type": label_type, "start": i, "end": i + 1}
+                current_tokens = [token]
         else:
             if current_entity:
                 current_entity["text"] = " ".join(current_tokens)

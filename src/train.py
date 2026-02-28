@@ -107,6 +107,16 @@ def run_grpo_training(
         # Create placeholder checkpoint if no training occurred
         final_dir = CHECKPOINT_DIR / "final"
         final_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save minimal model and tokenizer files so run_evaluation can load it
+        if use_unsloth:
+            model, tokenizer = _load_unsloth_model(config)
+        else:
+            model, tokenizer = _load_transformers_model(config)
+        
+        model.save_pretrained(str(final_dir))
+        tokenizer.save_pretrained(str(final_dir))
+        
         with open(final_dir / "README.md", "w") as f:
             f.write("# Placeholder Checkpoint\nNo training steps were performed.")
         print(f"Warning: No training occurred. Created placeholder at {final_dir}")

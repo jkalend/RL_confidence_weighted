@@ -64,9 +64,9 @@ def compute_self_consistency(generations: list[str]) -> tuple[str, float]:
 
 def compute_logprob_confidence(logprobs_list: list[list[float]]) -> float:
     """
-    Compute average log-probability confidence.
-    logprobs_list: list of token logprobs per generation.
-    Returns mean of mean logprobs per sequence (higher = more confident).
+    Compute spread-based log-probability confidence.
+    logprobs_list: list of token logprob lists per generation.
+    Returns exp(-spread) where spread = max_mean_lp - min_mean_lp (higher = more confident).
     """
     if not logprobs_list:
         return 0.0
