@@ -9,6 +9,10 @@ $pip = Join-Path $venv "Scripts\pip.exe"
 if (-not (Test-Path $python)) {
     Write-Host "Creating .venv..."
     python -m venv $venv
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to create virtualenv at $venv using python"
+        exit $LASTEXITCODE
+    }
 }
 
 Write-Host "Upgrading pip..."

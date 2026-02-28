@@ -81,6 +81,10 @@ def compute_logprob_confidence(logprobs_list: list[list[float]]) -> float:
     # Normalize to [0, 1] using softmax-like or min-max
     max_lp = max(mean_logprobs)
     min_lp = min(mean_logprobs)
+
+    if math.isinf(max_lp) and max_lp < 0:
+        return 0.0
+
     if max_lp == min_lp:
         return 1.0
     # Use spread-based confidence: tighter spreads produce values near 1

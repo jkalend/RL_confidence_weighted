@@ -33,9 +33,8 @@ class CurriculumScheduler:
         elif self.config.schedule == "step":
             # Pre-computed bins scaled between start and end
             idx = min(int(t * len(self.config.step_bins)), len(self.config.step_bins) - 1)
-            # Interpolate or scale the bin value between start and end
-            bin_val = self.config.step_bins[idx]
-            res = start + (end - start) * bin_val
+            # Use the bin value directly (already percentiles)
+            res = self.config.step_bins[idx]
         else:
             res = start + (end - start) * t
 

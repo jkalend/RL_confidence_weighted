@@ -101,7 +101,7 @@ def evaluate_model(
 
         true_tags = []
         pred_tags = []
-        for s, p in zip(source_samples, preds):
+        for s, p in zip(source_samples, preds, strict=True):
             true_tags.append(_tags_from_sample(s))
             pred_tags.append(_entities_to_bio_tags(s["tokens"], p))
 
@@ -119,7 +119,7 @@ def evaluate_model(
 
         true_tags = []
         pred_tags = []
-        for s, p in zip(target_samples, preds):
+        for s, p in zip(target_samples, preds, strict=True):
             true_tags.append(_tags_from_sample(s))
             pred_tags.append(_entities_to_bio_tags(s["tokens"], p))
 
@@ -145,20 +145,25 @@ def run_evaluation(
         from unsloth import FastLanguageModel
         model, tokenizer = FastLanguageModel.from_pretrained(
             model_name=str(checkpoint_path),
-            max_seq_length=512,
-            load_in_4bit=True,
+            max_seq_length=config.grpo.max_length if config else 512,
+            load_in_4bit=config.model.use_4bit if config else True,
         )
         FastLanguageModel.for_inference(model)
-    except Exception:
+    except (ImportError, ModuleNotFoundError, OSError, ValueError):
         from transformers import AutoModelForCausalLM, AutoTokenizer
         tokenizer = AutoTokenizer.from_pretrained(str(checkpoint_path), trust_remote_code=True)
         model = AutoModelForCausalLM.from_pretrained(
             str(checkpoint_path),
+            load_in_4bit=config.model.use_4bit if config else True,
             device_map="auto",
             trust_remote_code=True,
         )
 
-    source_samples = load_conll2003("test")
-    target_samples = load_few_nerd(split="inter", subset="supervised", max_samples=max_eval)
+    source_samples = load_conll2003(config.data.source_split if config else "test")
+    target_samples = load_few_nerd(
+        split=config.data.target_split if config else "test",
+        subset=config.data.target_subset if config else "inter",
+        max_samples=max_eval
+    )
 
     return evaluate_model(model, tokenizer, source_samples, target_samples, max_eval)

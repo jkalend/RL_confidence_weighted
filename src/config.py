@@ -60,7 +60,11 @@ class ModelConfig:
     # Qwen2.5-7B or Qwen2.5-4B for memory efficiency
     model_name: str = "Qwen/Qwen2.5-7B-Instruct"
     use_4bit: bool = True
-    load_in_4bit: bool = True
+
+    def __post_init__(self):
+        # Compatibility mapping for deprecated load_in_4bit
+        if hasattr(self, "load_in_4bit"):
+            self.use_4bit = getattr(self, "load_in_4bit")
 
     # LoRA
     lora_r: int = 16

@@ -24,6 +24,8 @@ def main():
     )
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
     # Remove non-serializable report (or convert to str)
     out = {k: v for k, v in results.items() if k != "source_report" and k != "target_report"}
     out["source_report"] = str(results.get("source_report", ""))

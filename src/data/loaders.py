@@ -31,7 +31,7 @@ def _extract_entities_from_bio(tokens: list[str], tags: list[str | int], label_n
 
         label_type = label[2:] if len(label) > 2 else ""
         if (label.startswith("B-") or label.startswith("I-")) and (
-            current_entity is None or label_type.split("-")[0] != current_entity["type"].split("-")[0]
+            current_entity is None or label_type != current_entity["type"]
         ):
             if current_entity:
                 current_entity["text"] = " ".join(current_tokens)
@@ -114,7 +114,7 @@ def load_ner_dataset(config: DataConfig, domain: str = "target") -> list[dict[st
 
     if dataset_name == "conll2003":
         return load_conll2003(split=split)
-    elif dataset_name == "few-nerd":
+    elif dataset_name == "few-nerd" or dataset_name.endswith("/few-nerd"):
         return load_few_nerd(split=split, subset=subset)
     else:
         # Fallback to defaults or raise error

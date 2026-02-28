@@ -85,7 +85,7 @@ def run_grpo_training(
             num_generations=config.grpo.num_generations,
             report_to=config.grpo.report_to,
             run_name=f"{config.grpo.run_name or 'curriculum-grpo'}-stage{epoch}",
-            bf16=config.grpo.bf16 if hasattr(config.grpo, "bf16") else _is_bf16_supported(),
+            bf16=config.grpo.bf16 if config.grpo.bf16 is not None else _is_bf16_supported(),
             gradient_checkpointing=True,
         )
 
@@ -103,6 +103,13 @@ def run_grpo_training(
 
     if trainer:
         trainer.save_model(str(CHECKPOINT_DIR / "final"))
+    else:
+        # Create placeholder checkpoint if no training occurred
+        final_dir = CHECKPOINT_DIR / "final"
+        final_dir.mkdir(parents=True, exist_ok=True)
+        with open(final_dir / "README.md", "w") as f:
+            f.write("# Placeholder Checkpoint\nNo training steps were performed.")
+        print(f"Warning: No training occurred. Created placeholder at {final_dir}")
 
 
 def _load_unsloth_model(config: Config):
@@ -112,7 +119,7 @@ def _load_unsloth_model(config: Config):
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=config.model.model_name,
         max_seq_length=config.grpo.max_length,
-        load_in_4bit=config.model.load_in_4bit,
+        load_in_4bit=config.model.use_4bit,
         dtype=None,
     )
     model = FastLanguageModel.get_peft_model(
@@ -132,7 +139,7 @@ def _load_transformers_model(config: Config):
     tokenizer = AutoTokenizer.from_pretrained(config.model.model_name, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
         config.model.model_name,
-        load_in_4bit=config.model.load_in_4bit,
+        load_in_4bit=config.model.use_4bit,
         device_map="auto",
         trust_remote_code=True,
     )

@@ -2,6 +2,7 @@
 
 import json
 import os
+import torch
 from pathlib import Path
 from typing import Any, Literal
 
@@ -149,7 +150,7 @@ def _load_unsloth_model(model_name: str, config: DataConfig):
 
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=model_name,
-        max_seq_length=512,
+        max_seq_length=getattr(config, "max_seq_length", 512),
         load_in_4bit=True,
         dtype=None,  # auto
     )
@@ -190,7 +191,7 @@ def _generate_k_outputs(model, tokenizer, prompt: str, K: int, temperature: floa
 
     outputs = []
     for _ in range(K):
-        with __import__("torch").no_grad():
+        with torch.no_grad():
             out = model.generate(
                 **inputs,
                 max_new_tokens=max_new_tokens,
