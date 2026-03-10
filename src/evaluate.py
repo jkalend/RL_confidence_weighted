@@ -145,7 +145,7 @@ def run_evaluation(
         from unsloth import FastLanguageModel
         model, tokenizer = FastLanguageModel.from_pretrained(
             model_name=str(checkpoint_path),
-            max_seq_length=config.grpo.max_length if config else 512,
+            max_seq_length=(config.grpo.max_prompt_length + config.grpo.max_completion_length) if config else 768,
             load_in_4bit=config.model.use_4bit if config else True,
         )
         FastLanguageModel.for_inference(model)

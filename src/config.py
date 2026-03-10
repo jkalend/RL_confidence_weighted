@@ -57,8 +57,8 @@ class CurriculumConfig:
 class ModelConfig:
     """Model configuration."""
 
-    # Qwen2.5-7B or Qwen2.5-4B for memory efficiency
-    model_name: str = "Qwen/Qwen2.5-7B-Instruct"
+    # Qwen3.5-4B (default) and Qwen3.5-9B fit on 24 GB. Qwen3-8B also supported.
+    model_name: str = "Qwen/Qwen3.5-4B"
     use_4bit: bool = True
 
     def __post_init__(self):
@@ -67,9 +67,11 @@ class ModelConfig:
             self.use_4bit = getattr(self, "load_in_4bit")
 
     # LoRA
+    # dropout MUST stay 0.0 for Unsloth to fast-patch LoRA matrices;
+    # any nonzero value silently falls back to slow paths and wastes VRAM.
     lora_r: int = 16
     lora_alpha: int = 32
-    lora_dropout: float = 0.05
+    lora_dropout: float = 0.0
     lora_target_modules: list[str] = field(
         default_factory=lambda: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
     )
@@ -80,14 +82,17 @@ class GRPOConfig:
     """GRPO training configuration."""
 
     num_train_epochs: int = 3
-    per_device_train_batch_size: int = 2
-    gradient_accumulation_steps: int = 8
+    per_device_train_batch_size: int = 1
+    gradient_accumulation_steps: int = 16
     learning_rate: float = 5e-6
-    max_length: int = 512
+    max_prompt_length: int = 384
+    # NER outputs are short structured lists; 256 tokens is ample and halves KV cache.
+    max_completion_length: int = 256
 
     # GRPO-specific
-    num_generations: int = 4  # group size for GRPO
-    beta: float = 0.01  # KL penalty coefficient
+    # 8B model has ~8 GB headroom on 24 GB after clone; 8 generations is fine.
+    num_generations: int = 8  # group size for GRPO
+    beta: float = 0.04  # KL divergence penalty coefficient (default in TRL is 0.04)
 
     # Replay buffer: mix in source domain to prevent forgetting
     replay_ratio: float = 0.1  # 10% real data per batch

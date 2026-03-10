@@ -4,3 +4,4 @@ __pycache__/
 .cursor
 unsloth_compiled_cache/
 plan.md
+wandb/
